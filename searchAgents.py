@@ -40,6 +40,7 @@ from game import Actions
 import util
 import time
 import search
+import pacman
 
 class GoWestAgent(Agent):
     "An agent that goes West until it can't."
@@ -492,8 +493,32 @@ def foodHeuristic(state, problem):
     problem.heuristicInfo['wallCount']
     """
     position, foodGrid = state
-    "*** YOUR CODE HERE ***"
-    return 0
+    walls = problem.walls
+
+
+
+    if not "adjacency" in problem.heuristicInfo:
+        problem.heuristicInfo["adjacency"] = dict()
+        for pos in [(x, y) for x in range(walls.width) for y in range(walls.height)]:
+            if not walls[pos[0]][pos[1]]:
+                problem.heuristicInfo["adjacency"][pos] = findAdjacency(pos, problem)
+
+
+    if foodGrid.count() == 0: return 0
+
+    for dot in problem.heuristicInfo["adjacency"][position]:
+
+        if foodGrid[dot[0][0]][dot[0][1]]:
+
+            return dot[1] + foodGrid.count() - 1
+
+
+
+    return foodGrid.count()
+
+
+
+
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
@@ -554,6 +579,7 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         self.costFn = lambda x: 1
         self._visited, self._visitedlist, self._expanded = {}, [], 0 # DO NOT CHANGE
 
+
     def isGoalState(self, state):
         """
         The state is Pacman's position. Fill this in with a goal test that will
@@ -561,6 +587,9 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         """
         x,y = state
         return self.food[x][y]
+
+
+
 
 def mazeDistance(point1, point2, gameState):
     """
@@ -579,3 +608,64 @@ def mazeDistance(point1, point2, gameState):
     assert not walls[x2][y2], 'point2 is a wall: ' + str(point2)
     prob = PositionSearchProblem(gameState, start=point1, goal=point2, warn=False, visualize=False)
     return len(search.bfs(prob))
+
+
+
+def findPathToClosestDot(position, food, problem):
+    afsp = AnyFoodSearchProblem2(position, food, problem)
+    return search.bfs(afsp)
+
+class AnyFoodSearchProblem2(PositionSearchProblem):
+    """
+    A search problem for finding a path to any food.
+
+    This search problem is just like the PositionSearchProblem, but has a
+    different goal test, which you need to fill in below.  The state space and
+    successor function do not need to be changed.
+
+    The class definition above, AnyFoodSearchProblem(PositionSearchProblem),
+    inherits the methods of the PositionSearchProblem.
+
+    You can use this search problem to help you fill in the findPathToClosestDot
+    method.
+    """
+
+    def __init__(self, position, food, problem):
+        "Stores information from the gameState.  You don't need to change this."
+        # Store the food for later reference
+        self.food = food
+
+        # Store info for the PositionSearchProblem (no need to change this)
+        self.walls = problem.walls
+        self.startState = position
+        self.costFn = lambda x: 1
+        self._visited, self._visitedlist, self._expanded = {}, [], 0 # DO NOT CHANGE
+
+
+    def isGoalState(self, state):
+        """
+        The state is Pacman's position. Fill this in with a goal test that will
+        complete the problem definition.
+        """
+        x,y = state
+        return self.food[x][y]
+
+def findAdjacency(position, problem):
+
+    apsp = allPositionSearchProblem(position, problem)
+    return search.bfs(apsp)
+
+class allPositionSearchProblem(PositionSearchProblem):
+
+    def __init__(self, position, problem):
+
+        # Store info for the PositionSearchProblem (no need to change this)
+        self.walls = problem.walls
+        self.startState = position
+        self.costFn = lambda x: 1
+        self._visited, self._visitedlist, self._expanded = {}, [], 0 # DO NOT CHANGE
+
+
+    def isGoalState(self, state):
+        return False
+

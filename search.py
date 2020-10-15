@@ -116,7 +116,8 @@ def explore2(problem, structure, addFunction=justAdd, heuristic=nullHeuristic): 
     start = problem.getStartState()
     frontera = structure()
     visited = dict() #En visited guardaremos además el padre y la acción que nos han llevado al hijo
-    addFunction((start, "noParent", 0,"noAction"), frontera, heuristic, problem)
+    sortedlist = []
+    addFunction((start, "noParent", 0,"noAction"), frontera, heuristic, problem) #En la pila ahora no pasamos caminos parciales, solo padres y acciones
 
     while not frontera.isEmpty():
 
@@ -136,13 +137,14 @@ def explore2(problem, structure, addFunction=justAdd, heuristic=nullHeuristic): 
 
         if not currentState in visited:
 
-            visited[currentState] = (currentParent, previousAction)
+            visited[currentState] = (currentParent, previousAction, currentCost)
+            sortedlist.append((currentState, currentCost)) #Vamos añadiendo los nodos a una lista, que los contiene junto con el coste de llegar a ellos
 
             for successor, action, extraCost in problem.getSuccessors(currentState):
 
                 addFunction((successor, currentState, currentCost + extraCost, action), frontera, heuristic, problem)
 
-    return []
+    return sortedlist #Si ningún nodo era goalstate, devolvemos todos los nodos, ordenados por coste
 
 
 def depthFirstSearch(problem):
