@@ -464,60 +464,13 @@ class AStarFoodSearchAgent(SearchAgent):
         self.searchFunction = lambda prob: search.aStarSearch(prob, foodHeuristic)
         self.searchType = FoodSearchProblem
 
-def foodHeuristic(state, problem):
-    """
-    Your heuristic for the FoodSearchProblem goes here.
+def foodHeuristic(state, problem): #Como mínimo el coste será ir a la comida más cercana, y luego una unidad extra por cada posición con comida distinta a la más cercana
 
-    This heuristic must be consistent to ensure correctness.  First, try to come
-    up with an admissible heuristic; almost all admissible heuristics will be
-    consistent as well.
-
-    If using A* ever finds a solution that is worse uniform cost search finds,
-    your heuristic is *not* consistent, and probably not admissible!  On the
-    other hand, inadmissible or inconsistent heuristics may find optimal
-    solutions, so be careful.
-
-    The state is a tuple ( pacmanPosition, foodGrid ) where foodGrid is a Grid
-    (see game.py) of either True or False. You can call foodGrid.asList() to get
-    a list of food coordinates instead.
-
-    If you want access to info like walls, capsules, etc., you can query the
-    problem.  For example, problem.walls gives you a Grid of where the walls
-    are.
-
-    If you want to *store* information to be reused in other calls to the
-    heuristic, there is a dictionary called problem.heuristicInfo that you can
-    use. For example, if you only want to count the walls once and store that
-    value, try: problem.heuristicInfo['wallCount'] = problem.walls.count()
-    Subsequent calls to this heuristic can access
-    problem.heuristicInfo['wallCount']
-    """
     position, foodGrid = state
-    walls = problem.walls
-
-
-
-    if not "adjacency" in problem.heuristicInfo:
-        problem.heuristicInfo["adjacency"] = dict()
-        for pos in [(x, y) for x in range(walls.width) for y in range(walls.height)]:
-            if not walls[pos[0]][pos[1]]:
-                problem.heuristicInfo["adjacency"][pos] = findAdjacency(pos, problem)
-
 
     if foodGrid.count() == 0: return 0
-
-    for dot in problem.heuristicInfo["adjacency"][position]:
-
-        if foodGrid[dot[0][0]][dot[0][1]]:
-
-            return dot[1] + foodGrid.count() - 1
-
-
-
+    return closestDot(position, problem, foodGrid)[1] + foodGrid.count() - 1
     return foodGrid.count()
-
-
-
 
 
 class ClosestDotSearchAgent(SearchAgent):
@@ -588,9 +541,6 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         x,y = state
         return self.food[x][y]
 
-
-
-
 def mazeDistance(point1, point2, gameState):
     """
     Returns the maze distance between any two points, using the search functions
@@ -608,8 +558,6 @@ def mazeDistance(point1, point2, gameState):
     assert not walls[x2][y2], 'point2 is a wall: ' + str(point2)
     prob = PositionSearchProblem(gameState, start=point1, goal=point2, warn=False, visualize=False)
     return len(search.bfs(prob))
-
-
 
 def findPathToClosestDot(position, food, problem):
     afsp = AnyFoodSearchProblem2(position, food, problem)
@@ -650,10 +598,27 @@ class AnyFoodSearchProblem2(PositionSearchProblem):
         x,y = state
         return self.food[x][y]
 
-def findAdjacency(position, problem):
+
+def findAdjacency(position, problem): #hace bfs (sin parar cuando llega a ningún nodo) para encontrar las distancias más cortas a cada posición
 
     apsp = allPositionSearchProblem(position, problem)
     return search.bfs(apsp)
+
+def closestDot(position, problem, food): #Encuentra la posición más cercana con comida. No calcula cada vez el coste de llegar a cada posición, solo una vez por nodo
+
+    if not "adjacency" in problem.heuristicInfo:
+        problem.heuristicInfo["adjacency"] = dict()
+
+    if not position in problem.heuristicInfo["adjacency"]:
+        problem.heuristicInfo["adjacency"][position] = findAdjacency(position, problem)
+
+    for point in problem.heuristicInfo["adjacency"][position]:
+        if food[point[0][0]][point[0][1]]:
+            return point
+
+
+
+
 
 class allPositionSearchProblem(PositionSearchProblem):
 
