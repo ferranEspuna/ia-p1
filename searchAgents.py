@@ -464,13 +464,26 @@ class AStarFoodSearchAgent(SearchAgent):
         self.searchFunction = lambda prob: search.aStarSearch(prob, foodHeuristic)
         self.searchType = FoodSearchProblem
 
-def foodHeuristic(state, problem): #Como mínimo el coste será ir a la comida más cercana, y luego una unidad extra por cada posición con comida distinta a la más cercana
+class BFSFoodSearchAgent(SearchAgent):#Para poder comparar la eficiencia de a* con la de bfs en el problema de la comida
+    "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
+    def __init__(self):
+        self.searchFunction = lambda prob: search.bfs(prob)
+        self.searchType = FoodSearchProblem
+
+def foodHeuristic2(state, problem): #Como mínimo el coste será ir a la comida más cercana, y luego una unidad extra por cada posición con comida distinta a la más cercana
 
     position, foodGrid = state
 
     if foodGrid.count() == 0: return 0
     return closestDot(position, problem, foodGrid)[1] + foodGrid.count() - 1
     return foodGrid.count()
+
+def foodHeuristic(state, problem): #Como mínimo el coste será ir a la posición más lejana con comida
+
+    position, foodGrid = state
+
+    if foodGrid.count() == 0: return 0
+    return farthestDot(position, problem, foodGrid)[1]
 
 
 class ClosestDotSearchAgent(SearchAgent):
@@ -599,27 +612,6 @@ class AnyFoodSearchProblem2(PositionSearchProblem):
         return self.food[x][y]
 
 
-def findAdjacency(position, problem): #hace bfs (sin parar cuando llega a ningún nodo) para encontrar las distancias más cortas a cada posición
-
-    apsp = allPositionSearchProblem(position, problem)
-    return search.bfs(apsp)
-
-def closestDot(position, problem, food): #Encuentra la posición más cercana con comida. No calcula cada vez el coste de llegar a cada posición, solo una vez por nodo
-
-    if not "adjacency" in problem.heuristicInfo:
-        problem.heuristicInfo["adjacency"] = dict()
-
-    if not position in problem.heuristicInfo["adjacency"]:
-        problem.heuristicInfo["adjacency"][position] = findAdjacency(position, problem)
-
-    for point in problem.heuristicInfo["adjacency"][position]:
-        if food[point[0][0]][point[0][1]]:
-            return point
-
-
-
-
-
 class allPositionSearchProblem(PositionSearchProblem):
 
     def __init__(self, position, problem):
@@ -633,4 +625,38 @@ class allPositionSearchProblem(PositionSearchProblem):
 
     def isGoalState(self, state):
         return False
+
+def findAdjacency(position, problem): #hace bfs (sin parar cuando llega a ningún nodo) para encontrar las distancias más cortas a cada posición
+
+    apsp = allPositionSearchProblem(position, problem)
+    return search.bfs(apsp)
+
+def findAdjacencyCheck(position, problem): #No calcula cada vez el coste de llegar a cada posición, solo una vez por nodo
+
+    if not "adjacency" in problem.heuristicInfo:
+        problem.heuristicInfo["adjacency"] = dict()
+
+    if not position in problem.heuristicInfo["adjacency"]:
+        problem.heuristicInfo["adjacency"][position] = findAdjacency(position, problem)
+
+    problem.heuristicInfo["adjacency"][position]
+
+def closestDot(position, problem, food): #Encuentra la posición más cercana con comida, con su coste.
+
+    findAdjacencyCheck(position, problem)
+
+    for point in problem.heuristicInfo["adjacency"][position]:
+        if food[point[0][0]][point[0][1]]:
+            return point
+
+
+def farthestDot(position, problem, food): #Encuentra la posición más lejana con comida, con su coste.
+
+    findAdjacencyCheck(position, problem)
+
+    for point in reversed(problem.heuristicInfo["adjacency"][position]):
+        if food[point[0][0]][point[0][1]]:
+            return point
+
+
 
