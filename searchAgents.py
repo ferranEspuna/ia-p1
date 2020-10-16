@@ -478,12 +478,32 @@ def foodHeuristic2(state, problem): #Como mínimo el coste será ir a la comida 
     return closestDot(position, problem, foodGrid)[1] + foodGrid.count() - 1
     return foodGrid.count()
 
-def foodHeuristic(state, problem): #Como mínimo el coste será ir a la posición más lejana con comida
+def foodHeuristic1(state, problem): #Como mínimo el coste será ir a la posición más lejana con comida
 
     position, foodGrid = state
 
     if foodGrid.count() == 0: return 0
     return farthestDot(position, problem, foodGrid)[1]
+
+def foodHeuristic0(state, problem):
+
+    position, foodGrid = state
+
+    if foodGrid.count() == 0: return 0
+    cd = closestDot(position, problem, foodGrid)[1]
+    minst = mstCheck(problem, foodGrid)
+
+    return cd + minst
+
+def foodHeuristic(state, problem):
+
+    h = foodHeuristic0(state, problem)
+    hprime = foodHeuristic1(state, problem)
+
+
+    return h
+
+
 
 
 class ClosestDotSearchAgent(SearchAgent):
@@ -639,24 +659,108 @@ def findAdjacencyCheck(position, problem): #No calcula cada vez el coste de lleg
     if not position in problem.heuristicInfo["adjacency"]:
         problem.heuristicInfo["adjacency"][position] = findAdjacency(position, problem)
 
-    problem.heuristicInfo["adjacency"][position]
+    return problem.heuristicInfo["adjacency"][position]
 
 def closestDot(position, problem, food): #Encuentra la posición más cercana con comida, con su coste.
 
-    findAdjacencyCheck(position, problem)
-
-    for point in problem.heuristicInfo["adjacency"][position]:
+    for point in findAdjacencyCheck(position, problem):
         if food[point[0][0]][point[0][1]]:
             return point
 
 
 def farthestDot(position, problem, food): #Encuentra la posición más lejana con comida, con su coste.
 
-    findAdjacencyCheck(position, problem)
-
-    for point in reversed(problem.heuristicInfo["adjacency"][position]):
+    for point in reversed(findAdjacencyCheck(position, problem)):
         if food[point[0][0]][point[0][1]]:
             return point
+
+
+def update(listn):
+
+    if len(listn) == 0: return 9999999999
+    return listn[0][2]
+
+def minIndex(listofnumbers):
+
+    minimum = listofnumbers[0]
+    index = 0
+    for idx, number in enumerate(listofnumbers):
+        if number < minimum:
+            index = idx
+            minimum = number
+
+    return index, minimum
+
+def gridToHashable(boolgrid):
+
+    return str(boolgrid)
+
+
+def join(pos1, pos2, connectionsDict):
+
+    winner = min(connectionsDict[pos1], connectionsDict[pos2])
+    loser = max(connectionsDict[pos1], connectionsDict[pos2])
+    for key in connectionsDict.keys():
+        if connectionsDict[key] == loser:
+            connectionsDict[key] = winner
+
+
+def isdone(connectionsDict):
+
+    l = list(connectionsDict.values())
+    first = l[0]
+    for value in l:
+        if value != first:
+            return False
+
+    return True
+
+def areJoined(pos1, pos2, connectionsDict):
+    return connectionsDict[pos1] == connectionsDict[pos2]
+
+def mst(problem, food):
+
+
+    edgesLists = [[((x1, y1), (x2, y2), cost) for (x2, y2), cost in findAdjacencyCheck((x1, y1), problem) if food[x2][y2]] for x1 in range(food.width) for y1 in range(food.height) if food[x1][y1]]
+    mincostList = [update(listn) for listn in edgesLists]
+    connectionsDict = {item[0][0]: number for number, item in enumerate(edgesLists)}
+    currentCost = 0
+
+
+
+
+    iters = 0
+    while(not isdone(connectionsDict)):
+
+        idx, minimum = minIndex(mincostList)
+
+        point1, point2, cost = edgesLists[idx].pop(0)
+        mincostList[idx] = update(edgesLists[idx])
+
+        if not areJoined(point1, point2, connectionsDict):
+
+            join(point1, point2, connectionsDict)
+            currentCost += cost
+
+    return currentCost
+
+
+def mstCheck(problem, food):
+
+    if not "mst" in problem.heuristicInfo:
+        problem.heuristicInfo["mst"] = dict()
+
+    n = gridToHashable(food)
+
+    if n in problem.heuristicInfo["mst"]: return problem.heuristicInfo["mst"][n]
+
+    minst = mst(problem, food)
+    problem.heuristicInfo["mst"][n] = minst
+    return minst
+
+
+
+
 
 
 
