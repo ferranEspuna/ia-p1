@@ -470,7 +470,7 @@ class BFSFoodSearchAgent(SearchAgent):#Para poder comparar la eficiencia de a* c
         self.searchFunction = lambda prob: search.bfs(prob)
         self.searchType = FoodSearchProblem
 
-def foodHeuristic2(state, problem): #Como mínimo el coste será ir a la comida más cercana, y luego una unidad extra por cada posición con comida distinta a la más cercana
+def foodHeuristic_closest(state, problem): #Como mínimo el coste será ir a la comida más cercana, y luego una unidad extra por cada posición con comida distinta a la más cercana
 
     position, foodGrid = state
 
@@ -478,14 +478,39 @@ def foodHeuristic2(state, problem): #Como mínimo el coste será ir a la comida 
     return closestDot(position, problem, foodGrid)[1] + foodGrid.count() - 1
     return foodGrid.count()
 
-def foodHeuristic1(state, problem): #Como mínimo el coste será ir a la posición más lejana con comida
+def foodHeuristic_farthest(state, problem): #Como mínimo el coste será ir a la posición más lejana con comida
 
     position, foodGrid = state
 
     if foodGrid.count() == 0: return 0
     return farthestDot(position, problem, foodGrid)[1]
 
-def foodHeuristic0(state, problem):
+def foodHeuristic_farthestApart(state, problem):
+
+    position, foodGrid = state
+
+    farthest1 = position
+    farthest2 = position
+    farthestdistance = 0
+
+    for x in range(foodGrid.width):
+        for y in range(foodGrid.height):
+            if foodGrid[x][y]:#Para cada posición sin comida:
+
+                for (x2, y2), distance in reversed(findAdjacencyCheck((x, y), problem)): #Empezamos mirando las posiciones del segundo desde la más lejana al primero
+                    if foodGrid[x2][y2]: #Esta es la posición con comida más alejada de (x, y)
+
+                        if distance > farthestdistance:#Si la distancia entre los nodos es más grande que las que hemos mirado hasta ahora, lo actualizamos
+
+                            farthest1 = (x, y)
+                            farthest2 = (x2, y2)
+                            farthestdistance = distance
+
+    addition = [dist for pos, dist in findAdjacencyCheck(position, problem) if (pos == farthest1 or pos == farthest2)]
+
+    return min(addition) + farthestdistance
+
+def foodHeuristic_mst(state, problem): #minimum spanning tree
 
     position, foodGrid = state
 
@@ -495,11 +520,30 @@ def foodHeuristic0(state, problem):
 
     return cd + minst
 
-def foodHeuristic(state, problem):
+"""
+Verbose nos permite ir imprimendo por pantalla las heurísticas más bajas obtenidas,
+lo cual nos da una idea del "progreso" de la ejecución (cuando llega a 0, hemos acabado.
 
-    h = foodHeuristic0(state, problem)
-    hprime = foodHeuristic1(state, problem)
+Nótese que lo cerca que estamos de la solución no depende linealmente de esta heurística:
+como nos centramos en los nodos con suma heurística + camino más baja, cuanto más baje la heurística
+tendremos exponencialmente más nodos por explorar.
 
+Heuristic va a ser una de las funciones anteriores marcadas como foodHeuristic_XXX
+
+"""
+
+def foodHeuristic(state, problem, verbose = True, heuristic = foodHeuristic_mst):
+
+    if verbose and not "heuristicRecord" in problem.heuristicInfo:
+        problem.heuristicInfo["heuristicRecord"] = 999999999
+
+
+    h = heuristic(state, problem)
+
+
+    if verbose and h < problem.heuristicInfo["heuristicRecord"]:
+        problem.heuristicInfo["heuristicRecord"] = h
+        print(h)
 
     return h
 
