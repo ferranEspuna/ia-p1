@@ -83,9 +83,15 @@ def nullHeuristic(state, problem=None):
 def justAdd(element, structure, heuristic=None, problem=None):
     structure.push(element)
 
-def addPriority(element, structure, heuristic, problem):
+def addPriority(element, structure, heuristic, problem): #Usaremos esta función para A* y para UCS, pues estos algoritmos usan una cola de prioridades a las cuales hay que pasar la prioridad.
     structure.push(element, element[2] + heuristic(element[0], problem))
 
+
+"""
+A continuación veremos dos implementaciones generales de algoritmos de búsqueda.
+Estas reciben por parámetro una estructura de datos (por ejemplo, una pila) que usarán a modo de frontera.
+Dependiendo de la estructura que pasemos, el algoritmo implementado será uno u otro.
+"""
 def explore(problem, structure, addFunction=justAdd, heuristic=nullHeuristic):
 
     start = problem.getStartState()
@@ -147,6 +153,8 @@ def explore2(problem, structure, addFunction=justAdd, heuristic=nullHeuristic): 
     return sortedlist #Si ningún nodo era goalstate, devolvemos todos los nodos, ordenados por coste
 
 
+
+
 def depthFirstSearch(problem):
     return explore2(problem, util.Stack) #Implementamos el algoritmo con una pila
 
@@ -156,7 +164,7 @@ def breadthFirstSearch(problem):
 def uniformCostSearch(problem): #Implementamos el algoritmo con una cola de prioridades
     return explore2(problem, util.PriorityQueue, addPriority, nullHeuristic)
 
-def aStarSearch(problem, heuristic=nullHeuristic):
+def aStarSearch(problem, heuristic=nullHeuristic): #Implementamos el algoritmo con una cola de prioridades, pasando si nos la dan una heurística
     return explore2(problem, util.PriorityQueue, addPriority, heuristic)
 
 

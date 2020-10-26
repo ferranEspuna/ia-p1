@@ -37,16 +37,15 @@ Good luck and happy searching!
 from game import Directions
 from game import Agent
 from game import Actions
-import util
 import time
 import search
-import pacman
+
 
 class GoWestAgent(Agent):
-    "An agent that goes West until it can't."
+    """An agent that goes West until it can't."""
 
     def getAction(self, state):
-        "The agent receives a GameState (defined in pacman.py)."
+        """The agent receives a GameState (defined in pacman.py)."""
         if Directions.WEST in state.getLegalPacmanActions():
             return Directions.WEST
         else:
@@ -56,6 +55,7 @@ class GoWestAgent(Agent):
 # This portion is written for you, but will only work #
 #       after you fill in parts of search.py          #
 #######################################################
+
 
 class SearchAgent(Agent):
     """
@@ -314,7 +314,7 @@ class CornersProblem(search.SearchProblem):
 
             if not hitsWall:
 
-                nextCorners = tuple((before or ((nextx, nexty) == corner) for corner, before in zip(self.corners, state[1]))) #TODO comentar esta vaina
+                nextCorners = tuple((before or ((nextx, nexty) == corner) for corner, before in zip(self.corners, state[1]))) #de las esquinas no visitadas, actualizamos la que corresponda si estamos en una esquina
 
                 nextState = ((nextx, nexty), nextCorners)
                 cost = self.costFn(nextState)
@@ -362,7 +362,6 @@ def cornersHeuristic(state, problem): #Encontramos el coste real si no hubiera p
     for i in range(4):
         if not state[1][i]:
             unvisitedCorners.append(corners[i])
-
 
     unvisitedCornersNumber = len(unvisitedCorners)  # Número de esquinas que no hemos visitado
 
@@ -485,6 +484,11 @@ def foodHeuristic_farthest(state, problem): #Como mínimo el coste será ir a la
     if foodGrid.count() == 0: return 0
     return farthestDot(position, problem, foodGrid)[1]
 
+"""
+#Esta heurística funciona muy bien, pero no he conseguido probar que es consistente.
+Se trata de encontrar el par de puntos mas alejados entre ellos e ir al más cercano y de uno al otro.
+Como no he conseguido probar su consistencia (y he encontrado una que funciona mejor), no la he acabado usando.
+"""
 def foodHeuristic_farthestApart(state, problem):
 
     position, foodGrid = state
@@ -510,7 +514,7 @@ def foodHeuristic_farthestApart(state, problem):
 
     return min(addition) + farthestdistance
 
-def foodHeuristic_mst(state, problem): #minimum spanning tree
+def foodHeuristic_mst(state, problem): #Esta es la heurística que he acabado usando. La justificación de su consistencia viene en el documento asociado a esta práctica.
 
     position, foodGrid = state
 
@@ -636,47 +640,7 @@ def mazeDistance(point1, point2, gameState):
     prob = PositionSearchProblem(gameState, start=point1, goal=point2, warn=False, visualize=False)
     return len(search.bfs(prob))
 
-def findPathToClosestDot(position, food, problem):
-    afsp = AnyFoodSearchProblem2(position, food, problem)
-    return search.bfs(afsp)
-
-class AnyFoodSearchProblem2(PositionSearchProblem):
-    """
-    A search problem for finding a path to any food.
-
-    This search problem is just like the PositionSearchProblem, but has a
-    different goal test, which you need to fill in below.  The state space and
-    successor function do not need to be changed.
-
-    The class definition above, AnyFoodSearchProblem(PositionSearchProblem),
-    inherits the methods of the PositionSearchProblem.
-
-    You can use this search problem to help you fill in the findPathToClosestDot
-    method.
-    """
-
-    def __init__(self, position, food, problem):
-        "Stores information from the gameState.  You don't need to change this."
-        # Store the food for later reference
-        self.food = food
-
-        # Store info for the PositionSearchProblem (no need to change this)
-        self.walls = problem.walls
-        self.startState = position
-        self.costFn = lambda x: 1
-        self._visited, self._visitedlist, self._expanded = {}, [], 0 # DO NOT CHANGE
-
-
-    def isGoalState(self, state):
-        """
-        The state is Pacman's position. Fill this in with a goal test that will
-        complete the problem definition.
-        """
-        x,y = state
-        return self.food[x][y]
-
-
-#Esta clase crea un problemaen el que ninguna posición es el objetivo, para que dada una posición inicial se encuentren las distancias a las otras posiciones
+#Esta clase crea un problema en el que ninguna posición es el objetivo, para que dada una posición inicial se encuentren las distancias a las otras posiciones
 class allPositionSearchProblem(PositionSearchProblem):
 
     def __init__(self, position, problem):
@@ -732,7 +696,7 @@ def update(listn):
     if len(listn) == 0: return 9999999999
     return listn[0][2]
 
-def minIndex(listofnumbers):
+def minIndex(listofnumbers): #Encuentra la posición mínima de una lista de números, así como su valor.
 
     minimum = listofnumbers[0]
     index = 0
@@ -743,11 +707,9 @@ def minIndex(listofnumbers):
 
     return index, minimum
 
-def gridToHashable(boolgrid):
 
-    return str(boolgrid)
 
-def join(pos1, pos2, connectionsDict):
+def join(pos1, pos2, connectionsDict): #Junta dos de los subconjuntos conexos del subgrafo creado
 
     winner = min(connectionsDict[pos1], connectionsDict[pos2])
     loser = max(connectionsDict[pos1], connectionsDict[pos2])
@@ -756,7 +718,7 @@ def join(pos1, pos2, connectionsDict):
             connectionsDict[key] = winner
 
 
-def isdone(connectionsDict):
+def isdone(connectionsDict): #Comprueba si el algoritmo de Kruskal ha acabado (todos los nodos pertenecen al mismo subconjunto conexo)
 
     l = list(connectionsDict.values())
     first = l[0]
@@ -766,31 +728,50 @@ def isdone(connectionsDict):
 
     return True
 
-def areJoined(pos1, pos2, connectionsDict):
+def areJoined(pos1, pos2, connectionsDict):#Comprueba si dos posiciones forman parte del mismo subconjunto conexo
     return connectionsDict[pos1] == connectionsDict[pos2]
 
 def mst(problem, food):#Esto es una implementación del algoritmo de Kruskal, optimizada para funcionar con listas de adyacencia ordenadas
 
 
+    #Encontramos todas las listas de puntos con comida, para cada comida x, ordenadas por coste real de ir a la comida y desde la comida x
     edgesLists = [[((x1, y1), (x2, y2), cost) for (x2, y2), cost in findAdjacencyCheck((x1, y1), problem) if food[x2][y2]] for x1 in range(food.width) for y1 in range(food.height) if food[x1][y1]]
+
+    #Mínimas distancias de cada lista de adyacencia a posiciones con comida
     mincostList = [update(listn) for listn in edgesLists]
+
+    #De momento cada nodo forma su propio conjunto conexo
     connectionsDict = {item[0][0]: number for number, item in enumerate(edgesLists)}
+
+    #de momento el coste total es 0
     currentCost = 0
 
+    #Mientras no tengamos un mst:
     while(not isdone(connectionsDict)):
 
+        #Escogemos el primer elemento más pequeño de entre todas las listas (claramente el más pequeño globalmente)
         idx, minimum = minIndex(mincostList)
 
+        #Extraemos los puntos que queremos conectar con el coste de hacerlo
         point1, point2, cost = edgesLists[idx].pop(0)
+
+        #Actualizamos el mínimo de dicha lista apropiadamente
         mincostList[idx] = update(edgesLists[idx])
 
+        #Si los puntos no están ya conectados:
         if not areJoined(point1, point2, connectionsDict):
 
+            #Los conectamos, con el coste asociado.
             join(point1, point2, connectionsDict)
             currentCost += cost
 
+    #Una vez hemos acabado, devolvemos el coste total del mst
     return currentCost
 
+
+def gridToHashable(boolgrid): #Convierte una foodgrid en algo que se pueda guardar en un diccionario
+
+    return str(boolgrid)
 
 def mstCheck(problem, food):#Si ya se ha calculado el mst para una colección de puntos (foodGrid), no hace falta volver a calcularlo
 
