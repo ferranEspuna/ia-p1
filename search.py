@@ -149,19 +149,15 @@ def explore2(problem, structure, addFunction=justAdd, heuristic=nullHeuristic): 
 
 def depthFirstSearch(problem):
     return explore2(problem, util.Stack) #Implementamos el algoritmo con una pila
-    #return explore(problem, util.Stack) #Implementamos el algoritmo con una pila
 
 def breadthFirstSearch(problem):
     return explore2(problem, util.Queue)  # Implementamos el algoritmo con una cola
-    #return explore(problem, util.Queue) #Implementamos el algoritmo con una cola
 
 def uniformCostSearch(problem): #Implementamos el algoritmo con una cola de prioridades
     return explore2(problem, util.PriorityQueue, addPriority, nullHeuristic)
-    #return explore(problem, util.PriorityQueue, addPriority, nullHeuristic)
 
 def aStarSearch(problem, heuristic=nullHeuristic):
     return explore2(problem, util.PriorityQueue, addPriority, heuristic)
-    #return explore(problem, util.PriorityQueue, addPriority, nullHeuristic)
 
 
 # Abbreviations

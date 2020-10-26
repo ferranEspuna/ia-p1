@@ -676,6 +676,7 @@ class AnyFoodSearchProblem2(PositionSearchProblem):
         return self.food[x][y]
 
 
+#Esta clase crea un problemaen el que ninguna posición es el objetivo, para que dada una posición inicial se encuentren las distancias a las otras posiciones
 class allPositionSearchProblem(PositionSearchProblem):
 
     def __init__(self, position, problem):
@@ -719,6 +720,13 @@ def farthestDot(position, problem, food): #Encuentra la posición más lejana co
             return point
 
 
+"""
+Los métodos a continuación tienen por objetivo calcular un minimum spanning tree de los puntos de comida restantes
+en un mapa concreto, usando los puntos como nodos y su distancia real entre ellos (calculada con un bfs) como pesos de las aristas.
+Esto se usa en la heurística foodHeuristic_mst
+"""
+
+
 def update(listn):
 
     if len(listn) == 0: return 9999999999
@@ -738,7 +746,6 @@ def minIndex(listofnumbers):
 def gridToHashable(boolgrid):
 
     return str(boolgrid)
-
 
 def join(pos1, pos2, connectionsDict):
 
@@ -762,7 +769,7 @@ def isdone(connectionsDict):
 def areJoined(pos1, pos2, connectionsDict):
     return connectionsDict[pos1] == connectionsDict[pos2]
 
-def mst(problem, food):
+def mst(problem, food):#Esto es una implementación del algoritmo de Kruskal, optimizada para funcionar con listas de adyacencia ordenadas
 
 
     edgesLists = [[((x1, y1), (x2, y2), cost) for (x2, y2), cost in findAdjacencyCheck((x1, y1), problem) if food[x2][y2]] for x1 in range(food.width) for y1 in range(food.height) if food[x1][y1]]
@@ -770,10 +777,6 @@ def mst(problem, food):
     connectionsDict = {item[0][0]: number for number, item in enumerate(edgesLists)}
     currentCost = 0
 
-
-
-
-    iters = 0
     while(not isdone(connectionsDict)):
 
         idx, minimum = minIndex(mincostList)
@@ -789,7 +792,7 @@ def mst(problem, food):
     return currentCost
 
 
-def mstCheck(problem, food):
+def mstCheck(problem, food):#Si ya se ha calculado el mst para una colección de puntos (foodGrid), no hace falta volver a calcularlo
 
     if not "mst" in problem.heuristicInfo:
         problem.heuristicInfo["mst"] = dict()
