@@ -337,7 +337,7 @@ class CornersProblem(search.SearchProblem):
         return len(actions)
 
 
-def cornersHeuristic(state, problem): #TODO comentar esta vaina
+def cornersHeuristic(state, problem): #Encontramos el coste real si no hubiera paredes.
     """
     A heuristic for the CornersProblem that you defined.
 
@@ -368,37 +368,37 @@ def cornersHeuristic(state, problem): #TODO comentar esta vaina
 
     x = state[0][0]
     y = state[0][1]
-    w = corners[3][0] - 1
-    h = corners[3][1] - 1
+    w = corners[3][0] - 1 #anchura del mapa
+    h = corners[3][1] - 1 #altura del mapa
 
-    if unvisitedCornersNumber == 0:
+    if unvisitedCornersNumber == 0: #si no nos quedan esquinas por visitar, estamos en goalstate y h = 0.
         return 0
 
     elif unvisitedCornersNumber == 1:
-        return abs(unvisitedCorners[0][0] - x) + abs(unvisitedCorners[0][1] - y)
+        return abs(unvisitedCorners[0][0] - x) + abs(unvisitedCorners[0][1] - y) #si solo queda una esquina por visitar, el coste sin paredes es la distancia Manhattan.
 
     elif unvisitedCornersNumber == 2:
-        return min([abs(x - x0) + abs(y - y0) for x0, y0 in unvisitedCorners]) + abs(
-            unvisitedCorners[0][0] - unvisitedCorners[1][0]) + abs(unvisitedCorners[0][1] - unvisitedCorners[1][1])
+        return min([abs(x - x0) + abs(y - y0) for x0, y0 in unvisitedCorners]) + abs( #Encontramos la esquina más cercana en distancia manhattan.
+            unvisitedCorners[0][0] - unvisitedCorners[1][0]) + abs(unvisitedCorners[0][1] - unvisitedCorners[1][1]) #Y le sumamos el coste de ir de una esquina a la otra.
 
     elif unvisitedCornersNumber == 3:
 
-        missingCornerIndex = state[1].index(True)
+        missingCornerIndex = state[1].index(True) #Encontramos la esquina que ya hemos visitado.
         missingCorner = (corners[missingCornerIndex])
 
-        a = abs(x - missingCorner[0])
+        a = abs(x - missingCorner[0]) #Estos 4 enteros son las distancias verticales y horizontales a la esquina que falta y a su esquina opuesta.
         b = abs(y - missingCorner[1])
         aprime = w - a
         bprime = h - b
 
-        return min([b + aprime + w + h,
+        return min([b + aprime + w + h, #Estos son los costes de los caminos posibles que recorren las tres esquinas que nos quedan. Con un dibujo queda claro.
                     a + bprime + w + h,
                     aprime + bprime + h + 2 * w,
                     aprime + bprime + w + 2 * h])
 
     else:
 
-        return max(w, h) + 2 * min(w, h) + min([abs(x - x0) + abs(y - y0) for x0, y0 in corners])
+        return max(w, h) + 2 * min(w, h) + min([abs(x - x0) + abs(y - y0) for x0, y0 in corners]) #Hay que ir a la esquina más cercana y recorrer 2 veces el lado corto y una vez el lado largo
 
 
 
@@ -532,7 +532,7 @@ Heuristic va a ser una de las funciones anteriores marcadas como foodHeuristic_X
 
 """
 
-def foodHeuristic(state, problem, verbose = True, heuristic = foodHeuristic_mst):
+def foodHeuristic(state, problem, verbose = False, heuristic = foodHeuristic_mst):
 
     if verbose and not "heuristicRecord" in problem.heuristicInfo:
         problem.heuristicInfo["heuristicRecord"] = 999999999
